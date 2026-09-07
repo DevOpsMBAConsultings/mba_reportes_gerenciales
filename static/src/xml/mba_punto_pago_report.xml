@@ -219,7 +219,7 @@
                                         </tr>
                                     </t>
                                 </tbody>
-                                <tfoot class="table-light fw-bold sticky-bottom">
+                                <tfoot class="table-light fw-bold">
                                     <tr class="table-success border-top border-2 border-success">
                                         <td colspan="6" class="text-start">TOTAL RECAUDADO EN EL PERÍODO</td>
                                         <td class="text-end pe-3 text-success fs-6 fw-bold">$ <t t-esc="formatMoney(state.data.total_recaudado)"/></td>
@@ -283,7 +283,7 @@
                                         </tr>
                                     </t>
                                 </tbody>
-                                <tfoot class="table-light fw-bold sticky-bottom">
+                                <tfoot class="table-light fw-bold">
                                     <tr class="table-warning border-top border-2 border-warning">
                                         <td colspan="5" class="text-start">TOTAL ÓRDENES DE VENTA PUNTO PAGO</td>
                                         <td class="text-end pe-3 text-dark fs-6 fw-bold">$ <t t-esc="formatMoney(state.data.total_ordenes_monto)"/></td>

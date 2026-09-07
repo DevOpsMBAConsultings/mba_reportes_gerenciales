@@ -10,11 +10,12 @@ export class MbaPuntoPagoReport extends Component {
     setup() {
         this.orm = useService("orm");
         const today = new Date();
-        const todayStr = today.toISOString().split("T")[0];
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split("T")[0];
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split("T")[0];
 
         this.state = useState({
-            dateFrom: todayStr,
-            dateTo: todayStr,
+            dateFrom: firstDay,
+            dateTo: lastDay,
             activeTab: 'pagos', // 'pagos' | 'ordenes'
             loading: true,
             data: null,

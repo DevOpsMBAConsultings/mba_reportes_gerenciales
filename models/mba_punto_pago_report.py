@@ -30,7 +30,7 @@ class MbaPuntoPagoReport(models.TransientModel):
             ('code', 'ilike', 'PP'),
         ])
 
-        # Pagos en account.payment asociados
+        # 1.A. Pagos directos en diario Punto Pago
         payment_domain = [
             ('date', '>=', target_from),
             ('date', '<=', target_to),
@@ -43,7 +43,29 @@ class MbaPuntoPagoReport(models.TransientModel):
         else:
             payment_domain.append(('journal_id.name', 'ilike', 'punto pago'))
 
-        payments = self.env['account.payment'].search(payment_domain, order='date desc, id desc')
+        direct_payments = self.env['account.payment'].search(payment_domain)
+
+        # 1.B. Pagos conciliados con facturas que tienen término de pago o referencia 'Punto Pago'
+        pp_invoices = self.env['account.move'].search([
+            ('company_id', '=', company.id),
+            ('move_type', 'in', ('out_invoice', 'out_refund')),
+            ('state', '=', 'posted'),
+            '|', '|',
+            ('invoice_payment_term_id.name', 'ilike', 'punto pago'),
+            ('payment_reference', 'ilike', 'punto pago'),
+            ('ref', 'ilike', 'punto pago'),
+        ])
+
+        reconciled_payment_ids = set()
+        for inv in pp_invoices:
+            for line in inv.line_ids.filtered(lambda l: l.account_id.account_type == 'asset_receivable'):
+                for partial in (line.matched_debit_ids | line.matched_credit_ids):
+                    p_obj = partial.debit_move_id.payment_id or partial.credit_move_id.payment_id
+                    if p_obj and p_obj.date and target_from <= p_obj.date <= target_to and p_obj.state in ('in_process', 'paid'):
+                        reconciled_payment_ids.add(p_obj.id)
+
+        all_payments = direct_payments | self.env['account.payment'].browse(reconciled_payment_ids)
+        payments = all_payments.sorted(key=lambda p: (p.date, p.id), reverse=True)
 
         total_pagado = 0.0
         transacciones = []

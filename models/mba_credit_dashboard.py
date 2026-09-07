@@ -141,7 +141,7 @@ class MbaCreditDashboard(models.TransientModel):
                     WHEN EXTRACT(DAY FROM pay.date) BETWEEN 16 AND 23 THEN 3
                     ELSE 4
                 END AS pay_week_idx,
-                j.name AS journal_name,
+                COALESCE(j.name->>'es_PA', j.name->>'es_ES', j.name->>'en_US', j.code) AS journal_name,
                 COALESCE(SUM(apr.amount), 0.0) AS journal_amount
             FROM account_move m
             JOIN account_move_line aml ON aml.move_id = m.id

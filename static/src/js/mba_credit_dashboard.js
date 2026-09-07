@@ -23,7 +23,7 @@ export class MbaCreditDashboard extends Component {
                 month: currentMonth,
                 month_name: "",
                 quarter: currentQuarter,
-                totals: { sales: 0.0, expected: 0.0, residual: 0.0, paid: 0.0 },
+                totals: { sales: 0.0, expected: 0.0, residual: 0.0, paid: 0.0, by_journal: {} },
                 weeks: [],
             },
             loading: true,

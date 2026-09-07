@@ -119,7 +119,7 @@
                                         <strong class="text-success">$ <t t-esc="formatMoney(state.data.totals.paid_cash)"/></strong>
                                     </div>
                                     <div class="mt-2 text-muted fw-bold o_mba_fs_smaller">Por Método / Banco:</div>
-                                    <t t-foreach="Object.keys(state.data.totals.by_journal)" t-as="jName" t-key="jName">
+                                    <t t-foreach="Object.keys(state.data.totals.by_journal || {})" t-as="jName" t-key="jName">
                                         <div class="d-flex justify-content-between align-items-center py-1 o_mba_fs_smaller">
                                             <span class="me-2 text-truncate" style="max-width: 200px;" t-att-title="jName"><t t-esc="jName"/>:</span>
                                             <strong class="text-nowrap">$ <t t-esc="formatMoney(state.data.totals.by_journal[jName])"/></strong>
@@ -268,7 +268,7 @@
                                                             <strong class="text-success">$ <t t-esc="formatMoney(w.collection.paid_cash)"/></strong>
                                                         </div>
                                                         <div class="mt-2 text-muted fw-bold">Por Método / Banco:</div>
-                                                        <t t-foreach="Object.keys(w.collection.by_journal)" t-as="jName" t-key="jName">
+                                                        <t t-foreach="Object.keys(w.collection.by_journal || {})" t-as="jName" t-key="jName">
                                                             <div class="d-flex justify-content-between align-items-center py-1">
                                                                 <span class="me-2 text-truncate" style="max-width: 190px;" t-att-title="jName"><t t-esc="jName"/>:</span>
                                                                 <strong class="text-nowrap">$ <t t-esc="formatMoney(w.collection.by_journal[jName])"/></strong>

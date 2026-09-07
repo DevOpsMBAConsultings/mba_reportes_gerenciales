@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="mba_reportes_gerenciales.DailyInvoiceClosing">
+        <div class="o_mba_dashboard o_mba_daily_invoice_closing_dashboard">
+            <!-- Header Superior y Selector de Fecha -->
+            <header class="o_mba_header mb-3">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="o_mba_brand_badge">
+                            <i class="fa fa-line-chart me-2"></i>MBA Analytics
+                        </div>
+                        <h2 class="m-0 fw-bold o_mba_title_text">Cierre Diario de Facturación y Arqueo Fiscal</h2>
+                    </div>
+                    <!-- Selector de Día -->
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" t-on-click="() => this.changeDay(-1)">
+                            <i class="fa fa-chevron-left"></i>
+                        </button>
+                        <input type="date" class="form-control form-control-sm text-center fw-bold" 
+                               style="width: 150px;"
+                               t-att-value="state.reportDate" 
+                               t-on-change="(ev) => this.onDateChange(ev.target.value)"/>
+                        <button class="btn btn-outline-secondary btn-sm" t-on-click="() => this.changeDay(1)">
+                            <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Botones Rápidos de Fecha -->
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm" 
+                            t-att-class="isToday ? 'btn-primary active text-white fw-bold' : 'btn-outline-secondary'"
+                            t-on-click="() => this.setToday()">
+                        <i class="fa fa-calendar-check-o me-1"></i>Hoy
+                    </button>
+                    <button class="btn btn-sm" 
+                            t-att-class="isYesterday ? 'btn-primary active text-white fw-bold' : 'btn-outline-secondary'"
+                            t-on-click="() => this.setYesterday()">
+                        <i class="fa fa-history me-1"></i>Ayer
+                    </button>
+                    <span class="badge bg-light text-dark align-self-center py-2 px-3 border ms-auto fs-7">
+                        <i class="fa fa-calendar me-1 text-primary"></i><t t-esc="state.data ? state.data.date_display : state.reportDate"/>
+                    </span>
+                </div>
+            </header>
+
+            <!-- Spinner de Carga -->
+            <t t-if="state.loading">
+                <div class="d-flex justify-content-center align-items-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando datos...</span>
+                    </div>
+                </div>
+            </t>
+
+            <t t-elif="state.data">
+                <!-- 4 Tiles Superiores Consistentes (col-md-3) -->
+                <div class="row g-3 mb-4">
+                    <!-- Tile 1: Total Facturado Emitido -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-file-text-o text-primary me-1"></i>Facturado Total (Bruto)
+                            </div>
+                            <div class="fs-2 fw-bold text-primary">
+                                $ <t t-esc="formatMoney(state.data.total_facturado)"/>
+                            </div>
+                            <small class="text-muted"><t t-esc="state.data.count_invoices"/> documento(s) fiscal(es) emitido(s)</small>
+                        </div>
+                    </div>
+
+                    <!-- Tile 2: Base Gravada ITBMS -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-tag text-info me-1"></i>Ventas Gravadas
+                            </div>
+                            <div class="fs-2 fw-bold text-info">
+                                $ <t t-esc="formatMoney(state.data.total_gravado)"/>
+                            </div>
+                            <small class="text-muted">Sujeto a impuesto fiscal</small>
+                        </div>
+                    </div>
+
+                    <!-- Tile 3: Base Exenta -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-certificate text-secondary me-1"></i>Ventas Exentas
+                            </div>
+                            <div class="fs-2 fw-bold text-secondary">
+                                $ <t t-esc="formatMoney(state.data.total_exento)"/>
+                            </div>
+                            <small class="text-muted">Servicios y productos sin impuesto</small>
+                        </div>
+                    </div>
+
+                    <!-- Tile 4: ITBMS Liquidado -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-percent text-danger me-1"></i>Total ITBMS (Impuestos)
+                            </div>
+                            <div class="fs-2 fw-bold text-danger">
+                                $ <t t-esc="formatMoney(state.data.total_itbms)"/>
+                            </div>
+                            <small class="text-muted">Impuesto fiscal generado</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Arqueo de Condición y Métodos de Cobro -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white py-3 border-bottom fw-bold">
+                                <i class="fa fa-balance-scale me-2 text-primary"></i>Condición de Venta Facturada
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                    <span class="fw-medium text-dark"><i class="fa fa-check-circle text-success me-2"></i>Venta de Contado</span>
+                                    <span class="fw-bold text-success fs-6">$ <t t-esc="formatMoney(state.data.total_contado)"/></span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center py-2">
+                                    <span class="fw-medium text-dark"><i class="fa fa-clock-o text-warning me-2"></i>Venta a Crédito</span>
+                                    <span class="fw-bold text-warning fs-6">$ <t t-esc="formatMoney(state.data.total_credito)"/></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white py-3 border-bottom fw-bold">
+                                <i class="fa fa-money me-2 text-success"></i>Arqueo de Recaudo por Canal de Cobro
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-2 text-center">
+                                    <div class="col-3 p-2 bg-light rounded border">
+                                        <div class="text-muted fs-8">EFECTIVO</div>
+                                        <div class="fw-bold text-dark fs-7">$ <t t-esc="formatMoney(state.data.cobros.efectivo)"/></div>
+                                    </div>
+                                    <div class="col-3 p-2 bg-light rounded border">
+                                        <div class="text-muted fs-8">CLAVE (DÉBITO)</div>
+                                        <div class="fw-bold text-primary fs-7">$ <t t-esc="formatMoney(state.data.cobros.clave)"/></div>
+                                    </div>
+                                    <div class="col-3 p-2 bg-light rounded border">
+                                        <div class="text-muted fs-8">TARJETAS CRÉDITO</div>
+                                        <div class="fw-bold text-info fs-7">$ <t t-esc="formatMoney(state.data.cobros.credito_card)"/></div>
+                                    </div>
+                                    <div class="col-3 p-2 bg-light rounded border">
+                                        <div class="text-muted fs-8">ACH / DIRECTO</div>
+                                        <div class="fw-bold text-secondary fs-7">$ <t t-esc="formatMoney(state.data.cobros.ach)"/></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detalle de Facturas del Día -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h5 class="m-0 fw-bold text-dark">
+                            <i class="fa fa-list-alt me-2 text-primary"></i>Detalle de Facturas y Notas del Día
+                        </h5>
+                        <button class="btn btn-sm btn-outline-secondary" t-on-click="() => this.loadData()">
+                            <i class="fa fa-refresh me-1"></i>Refrescar
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle m-0 text-nowrap">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-start" style="min-width: 140px;">Número Fiscal</th>
+                                        <th class="text-start" style="min-width: 250px;">Cliente</th>
+                                        <th class="text-center" style="min-width: 120px;">Condición</th>
+                                        <th class="text-end" style="min-width: 130px;">Subtotal ($)</th>
+                                        <th class="text-end" style="min-width: 110px;">ITBMS ($)</th>
+                                        <th class="text-end" style="min-width: 130px;">Total ($)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="state.data.facturas.length === 0">
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4 text-muted">
+                                                <i class="fa fa-info-circle me-1"></i>No se registraron documentos fiscales para esta fecha.
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <t t-foreach="state.data.facturas" t-as="f" t-key="f.id">
+                                        <tr>
+                                            <td class="text-start fw-bold">
+                                                <i class="fa fa-file-text-o me-2 text-primary"></i>
+                                                <span t-esc="f.name"/>
+                                            </td>
+                                            <td class="text-start text-dark fw-medium">
+                                                <span t-esc="f.partner_name"/>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge" t-att-class="f.is_credit ? 'bg-warning-subtle text-warning' : 'bg-success-subtle text-success'">
+                                                    <t t-esc="f.tipo_pago"/>
+                                                </span>
+                                            </td>
+                                            <td class="text-end pe-3">
+                                                $ <t t-esc="formatMoney(f.amount_untaxed)"/>
+                                            </td>
+                                            <td class="text-end pe-3 text-danger">
+                                                $ <t t-esc="formatMoney(f.amount_tax)"/>
+                                            </td>
+                                            <td class="text-end pe-3 fw-bold text-primary">
+                                                $ <t t-esc="formatMoney(f.amount_total)"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                                <tfoot class="table-light fw-bold sticky-bottom">
+                                    <tr class="table-primary border-top border-2">
+                                        <td colspan="3" class="text-start">TOTAL CONSOLIDADO DEL DÍA</td>
+                                        <td class="text-end pe-3">$ <t t-esc="formatMoney(state.data.total_facturado - state.data.total_itbms)"/></td>
+                                        <td class="text-end pe-3 text-danger">$ <t t-esc="formatMoney(state.data.total_itbms)"/></td>
+                                        <td class="text-end pe-3 text-primary fs-6">$ <t t-esc="formatMoney(state.data.total_facturado)"/></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

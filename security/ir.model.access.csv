@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mba_credit_dashboard_user,mba.credit.dashboard.user,model_mba_credit_dashboard,account.group_account_invoice,1,1,1,1
+access_mba_credit_dashboard_manager,mba.credit.dashboard.manager,model_mba_credit_dashboard,account.group_account_manager,1,1,1,1
+access_mba_monthly_income_user,mba.monthly.income.user,model_mba_monthly_income,account.group_account_invoice,1,1,1,1
+access_mba_monthly_income_manager,mba.monthly.income.manager,model_mba_monthly_income,account.group_account_manager,1,1,1,1
+access_mba_profitability_user,mba.profitability.dashboard.user,model_mba_profitability_dashboard,account.group_account_invoice,1,1,1,1
+access_mba_profitability_manager,mba.profitability.dashboard.manager,model_mba_profitability_dashboard,account.group_account_manager,1,1,1,1
+access_mba_daily_invoice_closing_user,mba.daily.invoice.closing.user,model_mba_daily_invoice_closing,account.group_account_invoice,1,1,1,1
+access_mba_daily_invoice_closing_manager,mba.daily.invoice.closing.manager,model_mba_daily_invoice_closing,account.group_account_manager,1,1,1,1
+access_mba_inventory_dashboard_user,mba.inventory.dashboard.user,model_mba_inventory_dashboard,account.group_account_invoice,1,1,1,1
+access_mba_inventory_dashboard_manager,mba.inventory.dashboard.manager,model_mba_inventory_dashboard,account.group_account_manager,1,1,1,1
+access_mba_punto_pago_report_user,mba.punto.pago.report.user,model_mba_punto_pago_report,account.group_account_invoice,1,1,1,1
+access_mba_punto_pago_report_manager,mba.punto.pago.report.manager,model_mba_punto_pago_report,account.group_account_manager,1,1,1,1

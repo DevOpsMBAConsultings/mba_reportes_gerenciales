@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="mba_reportes_gerenciales.MonthlyIncome">
+        <div class="o_mba_dashboard o_mba_monthly_income_dashboard">
+            <!-- Header Superior -->
+            <header class="o_mba_header mb-3">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="o_mba_brand_badge">
+                            <i class="fa fa-line-chart me-2"></i>MBA Analytics
+                        </div>
+                        <h2 class="m-0 fw-bold o_mba_title_text">Resumen Mensual de Ingresos (MTD)</h2>
+                    </div>
+                    <div class="o_mba_year_selector d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" t-on-click="() => this.changeYear(-1)">
+                            <i class="fa fa-chevron-left"></i>
+                        </button>
+                        <span class="fw-bold fs-5 px-2" t-esc="state.year"/>
+                        <button class="btn btn-outline-secondary btn-sm" t-on-click="() => this.changeYear(1)">
+                            <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Selector de Meses -->
+                <div class="o_mba_month_tabs d-flex flex-wrap gap-1">
+                    <t t-foreach="monthsList" t-as="m" t-key="m.number">
+                        <button class="btn btn-sm flex-fill"
+                                t-att-class="state.month === m.number ? 'btn-primary active text-white fw-bold' : 'btn-outline-secondary'"
+                                t-on-click="() => this.selectMonth(m.number)">
+                            <t t-esc="m.name"/>
+                        </button>
+                    </t>
+                </div>
+            </header>
+
+            <!-- Spinner mientras carga -->
+            <t t-if="state.loading">
+                <div class="d-flex justify-content-center align-items-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando datos...</span>
+                    </div>
+                </div>
+            </t>
+
+            <t t-elif="state.data">
+                <!-- 4 Tiles Superiores Consistentes (col-md-3) -->
+                <div class="row g-3 mb-4">
+                    <!-- Tile 1: Total Ingresos Cobrados -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-money text-success me-1"></i>Total Ingresos Cobrados
+                            </div>
+                            <div class="fs-2 fw-bold text-success">
+                                $ <t t-esc="formatMoney(state.data.total_income_collected)"/>
+                            </div>
+                            <small class="text-muted">Caja real liquidada en el mes</small>
+                        </div>
+                    </div>
+
+                    <!-- Tile 2: Facturación a Crédito (Informativo) -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-file-text-o text-warning me-1"></i>Facturado a Crédito
+                            </div>
+                            <div class="fs-2 fw-bold text-warning">
+                                $ <t t-esc="formatMoney(state.data.total_credit_sales)"/>
+                            </div>
+                            <small class="text-muted">Cartera por cobrar originada</small>
+                        </div>
+                    </div>
+
+                    <!-- Tile 3: Total Cobros CxC -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-check-circle text-primary me-1"></i>Recuperación CxC
+                            </div>
+                            <div class="fs-2 fw-bold text-primary">
+                                $ <t t-esc="formatMoney(state.data.concept_totals['cobros_cxc'])"/>
+                            </div>
+                            <small class="text-muted">Abonos recibidos a facturas previas</small>
+                        </div>
+                    </div>
+
+                    <!-- Tile 4: Pagos Electrónicos (Clave + Tarjetas + ACH) -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-credit-card text-info me-1"></i>Canales Bancarios
+                            </div>
+                            <div class="fs-2 fw-bold text-info">
+                                $ <t t-esc="formatMoney(state.data.concept_totals['clave'] + state.data.concept_totals['visa_masterd'] + state.data.concept_totals['ach_directo'])"/>
+                            </div>
+                            <small class="text-muted">Tarjetas y transferencias electrónicas</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Matriz MTD Día a Día -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h5 class="m-0 fw-bold text-dark">
+                            <i class="fa fa-calendar me-2 text-primary"></i>Matriz MTD de Ingresos Diarios (<t t-esc="state.data.month_name"/>)
+                        </h5>
+                        <button class="btn btn-sm btn-outline-secondary" t-on-click="() => this.loadData()">
+                            <i class="fa fa-refresh me-1"></i>Refrescar
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 520px; overflow-x: auto; overflow-y: auto;">
+                            <table class="table table-bordered table-hover align-middle m-0 o_mba_mtd_table text-nowrap">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th class="text-start sticky-col" style="min-width: 240px; background-color: #f8f9fa;">
+                                            Concepto / Canal de Ingreso
+                                        </th>
+                                        <th class="text-end bg-primary text-white" style="min-width: 140px;">
+                                            TOTAL MTD
+                                        </th>
+                                        <t t-foreach="state.data.day_headers" t-as="d" t-key="d.key">
+                                            <th class="text-center" t-att-class="d.is_today ? 'table-warning border-warning' : (d.is_weekend ? 'bg-light-subtle text-muted' : '')" style="min-width: 90px;">
+                                                <div class="fw-bold fs-7"><t t-esc="d.day_num"/></div>
+                                                <div class="fs-8 text-uppercase"><t t-esc="d.day_name"/></div>
+                                            </th>
+                                        </t>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="state.data.concepts" t-as="c" t-key="c.code">
+                                        <tr t-att-class="c.informative ? 'fst-italic opacity-75' : ''">
+                                            <td class="text-start sticky-col bg-white">
+                                                <i t-attf-class="fa #{c.icon} me-2 text-#{c.color}"></i>
+                                                <span class="fw-medium text-dark"><t t-esc="c.name"/></span>
+                                                <t t-if="c.informative">
+                                                    <small class="badge bg-secondary-subtle text-secondary ms-1">Info</small>
+                                                </t>
+                                            </td>
+                                            <td class="text-end pe-3 fw-bold" t-att-class="'text-' + c.color">
+                                                $ <t t-esc="formatMoney(state.data.concept_totals[c.code])"/>
+                                            </td>
+                                            <t t-foreach="state.data.day_headers" t-as="d" t-key="d.key">
+                                                <td class="text-end pe-2" t-att-class="d.is_today ? 'table-warning' : (d.is_weekend ? 'bg-light-subtle' : '')">
+                                                    <t t-set="val" t-value="state.data.matrix[c.code][d.key]"/>
+                                                    <t t-if="val > 0">
+                                                        <span class="fw-medium">$ <t t-esc="formatMoney(val)"/></span>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span class="text-muted opacity-50">-</span>
+                                                    </t>
+                                                </td>
+                                            </t>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                                <tfoot class="table-light sticky-bottom fw-bold">
+                                    <tr class="table-primary border-top border-2">
+                                        <td class="text-start sticky-col bg-primary-subtle text-primary fw-bold" style="z-index: 5;">
+                                            TOTAL INGRESOS DEL DÍA (COBRADO)
+                                        </td>
+                                        <td class="bg-primary text-white text-end pe-3 fs-6">
+                                            $ <t t-esc="formatMoney(state.data.total_income_collected)"/>
+                                        </td>
+                                        <t t-foreach="state.data.day_headers" t-as="d" t-key="d.key">
+                                            <td class="text-end pe-2 text-primary" t-att-class="d.is_today ? 'table-warning' : ''">
+                                                <t t-set="day_tot" t-value="state.data.daily_totals[d.key]"/>
+                                                <t t-if="day_tot > 0">
+                                                    $ <t t-esc="formatMoney(day_tot)"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <span class="text-muted opacity-50">-</span>
+                                                </t>
+                                            </td>
+                                        </t>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

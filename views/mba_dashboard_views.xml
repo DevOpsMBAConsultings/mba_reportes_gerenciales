@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_mba_credit_dashboard" model="ir.actions.client">
+        <field name="name">Ventas a Crédito vs Expectativa de Cobranza</field>
+        <field name="tag">mba_credit_dashboard</field>
+        <field name="target">current</field>
+    </record>
+
+    <record id="action_mba_monthly_income" model="ir.actions.client">
+        <field name="name">Resumen Mensual de Ingresos (MTD)</field>
+        <field name="tag">mba_monthly_income</field>
+        <field name="target">current</field>
+    </record>
+
+    <record id="action_mba_profitability_dashboard" model="ir.actions.client">
+        <field name="name">Cierre y Rentabilidad Real</field>
+        <field name="tag">mba_profitability_dashboard</field>
+        <field name="target">current</field>
+    </record>
+
+    <record id="action_mba_daily_invoice_closing" model="ir.actions.client">
+        <field name="name">Cierre Diario de Facturación y Arqueo Fiscal</field>
+        <field name="tag">mba_daily_invoice_closing</field>
+        <field name="target">current</field>
+    </record>
+
+    <record id="action_mba_inventory_dashboard" model="ir.actions.client">
+        <field name="name">Control Operativo de Inventario y Abastecimiento</field>
+        <field name="tag">mba_inventory_dashboard</field>
+        <field name="target">current</field>
+    </record>
+
+    <record id="action_mba_punto_pago_report" model="ir.actions.client">
+        <field name="name">Reporte de Órdenes Punto Pago</field>
+        <field name="tag">mba_punto_pago_report</field>
+        <field name="target">current</field>
+    </record>
+</odoo>

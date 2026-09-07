@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="mba_reportes_gerenciales.ProfitabilityDashboard">
+        <div class="o_mba_dashboard o_mba_profitability_dashboard">
+            <!-- Header Superior y Conmutador Diario / Mensual -->
+            <header class="o_mba_header mb-3">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="o_mba_brand_badge">
+                            <i class="fa fa-line-chart me-2"></i>MBA Analytics
+                        </div>
+                        <h2 class="m-0 fw-bold o_mba_title_text">Cierre y Rentabilidad Real (Ventas vs Costo)</h2>
+                    </div>
+
+                    <!-- Selector de Modo: Diario vs Mensual -->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm"
+                                t-att-class="state.periodType === 'day' ? 'btn-primary active fw-bold' : 'btn-outline-secondary'"
+                                t-on-click="() => this.setPeriodType('day')">
+                            <i class="fa fa-calendar-check-o me-1"></i>Cierre Diario
+                        </button>
+                        <button type="button" class="btn btn-sm"
+                                t-att-class="state.periodType === 'month' ? 'btn-primary active fw-bold' : 'btn-outline-secondary'"
+                                t-on-click="() => this.setPeriodType('month')">
+                            <i class="fa fa-calendar me-1"></i>Cierre Mensual
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Controles para Cierre Diario -->
+                <t t-if="state.periodType === 'day'">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <button class="btn btn-sm" 
+                                t-att-class="isToday ? 'btn-primary active text-white fw-bold' : 'btn-outline-secondary'"
+                                t-on-click="() => this.setToday()">
+                            <i class="fa fa-clock-o me-1"></i>Hoy
+                        </button>
+                        <button class="btn btn-sm" 
+                                t-att-class="isYesterday ? 'btn-primary active text-white fw-bold' : 'btn-outline-secondary'"
+                                t-on-click="() => this.setYesterday()">
+                            <i class="fa fa-history me-1"></i>Ayer
+                        </button>
+
+                        <div class="d-flex align-items-center gap-1 ms-2">
+                            <button class="btn btn-outline-secondary btn-sm" t-on-click="() => this.changeDay(-1)">
+                                <i class="fa fa-chevron-left"></i>
+                            </button>
+                            <input type="date" class="form-control form-control-sm text-center fw-bold" 
+                                   style="width: 150px;"
+                                   t-att-value="state.reportDate" 
+                                   t-on-change="(ev) => this.onDateChange(ev.target.value)"/>
+                            <button class="btn btn-outline-secondary btn-sm" t-on-click="() => this.changeDay(1)">
+                                <i class="fa fa-chevron-right"></i>
+                            </button>
+                        </div>
+
+                        <span class="badge bg-light text-dark py-2 px-3 border ms-auto fs-7">
+                            <i class="fa fa-calendar me-1 text-primary"></i><t t-esc="state.data ? state.data.period_display : state.reportDate"/>
+                        </span>
+                    </div>
+                </t>
+
+                <!-- Controles para Cierre Mensual -->
+                <t t-if="state.periodType === 'month'">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-outline-secondary btn-sm" t-on-click="() => this.changeYear(-1)">
+                                <i class="fa fa-chevron-left"></i>
+                            </button>
+                            <span class="fw-bold fs-5 px-2 text-primary" t-esc="state.year"/>
+                            <button class="btn btn-outline-secondary btn-sm" t-on-click="() => this.changeYear(1)">
+                                <i class="fa fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <span class="badge bg-light text-dark py-2 px-3 border ms-auto fs-7">
+                            <i class="fa fa-calendar me-1 text-primary"></i><t t-esc="state.data ? state.data.period_display : ''"/>
+                        </span>
+                    </div>
+                    <div class="o_mba_month_tabs d-flex flex-wrap gap-1 mt-2">
+                        <t t-foreach="monthsList" t-as="m" t-key="m.number">
+                            <button class="btn btn-sm flex-fill"
+                                    t-att-class="state.month === m.number ? 'btn-primary active text-white fw-bold' : 'btn-outline-secondary'"
+                                    t-on-click="() => this.selectMonth(m.number)">
+                                <t t-esc="m.name"/>
+                            </button>
+                        </t>
+                    </div>
+                </t>
+            </header>
+
+            <!-- Spinner de Carga -->
+            <t t-if="state.loading">
+                <div class="d-flex justify-content-center align-items-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Calculando rentabilidad...</span>
+                    </div>
+                </div>
+            </t>
+
+            <t t-elif="state.data">
+                <!-- 4 Tiles Superiores Consistentes (col-md-3) -->
+                <div class="row g-3 mb-4">
+                    <!-- Tile 1: Ventas Totales -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-shopping-cart text-primary me-1"></i>Ventas Totales Netas
+                            </div>
+                            <div class="fs-2 fw-bold text-primary">
+                                $ <t t-esc="formatMoney(state.data.total_ventas)"/>
+                            </div>
+                            <small class="text-muted">Facturación externa + POS sin duplicados</small>
+                        </div>
+                    </div>
+
+                    <!-- Tile 2: Costo de Ventas Real -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-cubes text-danger me-1"></i>Costo Real de Inventario
+                            </div>
+                            <div class="fs-2 fw-bold text-danger">
+                                $ <t t-esc="formatMoney(state.data.total_costo)"/>
+                            </div>
+                            <small class="text-muted">Trazado a capas de valoración (SVL)</small>
+                        </div>
+                    </div>
+
+                    <!-- Tile 3: Utilidad Bruta -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-line-chart text-success me-1"></i>Utilidad Bruta
+                            </div>
+                            <div class="fs-2 fw-bold text-success">
+                                $ <t t-esc="formatMoney(state.data.utilidad_bruta)"/>
+                            </div>
+                            <small class="text-muted">Ganancia neta sobre costo en el período</small>
+                        </div>
+                    </div>
+
+                    <!-- Tile 4: Margen Bruto % -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-percent text-info me-1"></i>Margen Bruto Real
+                            </div>
+                            <div class="fs-2 fw-bold" t-att-class="state.data.margen_pct >= 25 ? 'text-success' : (state.data.margen_pct >= 15 ? 'text-warning' : 'text-danger')">
+                                <t t-esc="formatNumber(state.data.margen_pct)"/> %
+                            </div>
+                            <small class="text-muted">Rentabilidad porcentual promedio</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Margen por Categoría de Producto -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h5 class="m-0 fw-bold text-dark">
+                            <i class="fa fa-tags me-2 text-primary"></i>Rentabilidad por Categoría / Departamento
+                        </h5>
+                        <button class="btn btn-sm btn-outline-secondary" t-on-click="() => this.loadData()">
+                            <i class="fa fa-refresh me-1"></i>Refrescar
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle m-0 text-nowrap">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-start" style="min-width: 250px;">Categoría / Departamento</th>
+                                        <th class="text-end" style="min-width: 140px;">Ventas Netas ($)</th>
+                                        <th class="text-end" style="min-width: 140px;">Costo Real ($)</th>
+                                        <th class="text-end" style="min-width: 140px;">Utilidad Bruta ($)</th>
+                                        <th class="text-center" style="min-width: 180px;">Margen Bruto (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="state.data.categorias.length === 0">
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted">
+                                                <i class="fa fa-info-circle me-1"></i>No se registraron ventas en este período.
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <t t-foreach="state.data.categorias" t-as="c" t-key="c.id">
+                                        <tr>
+                                            <td class="text-start fw-bold">
+                                                <i class="fa fa-folder-open-o me-2 text-primary"></i>
+                                                <span t-esc="c.name"/>
+                                            </td>
+                                            <td class="text-end pe-3 text-primary fw-medium">
+                                                $ <t t-esc="formatMoney(c.ventas)"/>
+                                            </td>
+                                            <td class="text-end pe-3 text-danger">
+                                                $ <t t-esc="formatMoney(c.costo)"/>
+                                            </td>
+                                            <td class="text-end pe-3 fw-bold text-success">
+                                                $ <t t-esc="formatMoney(c.utilidad)"/>
+                                            </td>
+                                            <td class="text-center px-3">
+                                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                                    <div class="progress flex-grow-1" style="height: 8px;">
+                                                        <div class="progress-bar" role="progressbar" 
+                                                             t-att-style="'width: ' + Math.min(Math.max(c.margen_pct, 0), 100) + '%;'"
+                                                             t-att-class="c.margen_pct >= 25 ? 'bg-success' : (c.margen_pct >= 15 ? 'bg-warning' : 'bg-danger')">
+                                                        </div>
+                                                    </div>
+                                                    <span class="badge fw-bold fs-7" 
+                                                          t-att-class="c.margen_pct >= 25 ? 'bg-success-subtle text-success' : (c.margen_pct >= 15 ? 'bg-warning-subtle text-warning' : 'bg-danger-subtle text-danger')">
+                                                        <t t-esc="formatNumber(c.margen_pct)"/>%
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                                <tfoot class="table-light fw-bold">
+                                    <tr class="table-primary border-top border-2">
+                                        <td class="text-start">TOTAL CONSOLIDADO</td>
+                                        <td class="text-end pe-3 text-primary fs-6">$ <t t-esc="formatMoney(state.data.total_ventas)"/></td>
+                                        <td class="text-end pe-3 text-danger fs-6">$ <t t-esc="formatMoney(state.data.total_costo)"/></td>
+                                        <td class="text-end pe-3 text-success fs-6">$ <t t-esc="formatMoney(state.data.utilidad_bruta)"/></td>
+                                        <td class="text-center fs-6 text-primary"><t t-esc="formatNumber(state.data.margen_pct)"/> %</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

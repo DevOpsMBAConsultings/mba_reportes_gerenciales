@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="mba_reportes_gerenciales.PuntoPagoReport">
+        <div class="o_mba_dashboard o_mba_punto_pago_report_dashboard">
+            <!-- Header Superior y Selector de Fechas -->
+            <header class="o_mba_header mb-3">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="o_mba_brand_badge">
+                            <i class="fa fa-line-chart me-2"></i>MBA Analytics
+                        </div>
+                        <h2 class="m-0 fw-bold o_mba_title_text">Reporte Ejecutivo de Órdenes y Pagos: Punto Pago</h2>
+                    </div>
+
+                    <!-- Selector de Rango de Fechas -->
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="input-group input-group-sm" style="width: auto;">
+                            <span class="input-group-text bg-light text-muted">Desde</span>
+                            <input type="date" class="form-control form-control-sm text-center fw-bold" 
+                                   style="width: 140px;"
+                                   t-att-value="state.dateFrom" 
+                                   t-on-change="(ev) => this.onDateFromChange(ev.target.value)"/>
+                        </div>
+                        <div class="input-group input-group-sm" style="width: auto;">
+                            <span class="input-group-text bg-light text-muted">Hasta</span>
+                            <input type="date" class="form-control form-control-sm text-center fw-bold" 
+                                   style="width: 140px;"
+                                   t-att-value="state.dateTo" 
+                                   t-on-change="(ev) => this.onDateToChange(ev.target.value)"/>
+                        </div>
+                        <button class="btn btn-primary btn-sm" t-on-click="() => this.loadData()">
+                            <i class="fa fa-search me-1"></i>Filtrar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Botones Rápidos de Fecha -->
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm" 
+                            t-att-class="isToday ? 'btn-primary active text-white fw-bold' : 'btn-outline-secondary'"
+                            t-on-click="() => this.setToday()">
+                        <i class="fa fa-calendar-check-o me-1"></i>Hoy
+                    </button>
+                    <button class="btn btn-sm" 
+                            t-att-class="isYesterday ? 'btn-primary active text-white fw-bold' : 'btn-outline-secondary'"
+                            t-on-click="() => this.setYesterday()">
+                        <i class="fa fa-history me-1"></i>Ayer
+                    </button>
+                    <button class="btn btn-sm" 
+                            t-att-class="isCurrentMonth ? 'btn-primary active text-white fw-bold' : 'btn-outline-secondary'"
+                            t-on-click="() => this.setThisMonth()">
+                        <i class="fa fa-calendar me-1"></i>Este Mes
+                    </button>
+                    <span class="badge bg-light text-dark align-self-center py-2 px-3 border ms-auto fs-7">
+                        <i class="fa fa-calendar-o me-1 text-primary"></i>Período: <t t-esc="state.data ? state.data.date_display : ''"/>
+                    </span>
+                </div>
+            </header>
+
+            <!-- Spinner de Carga -->
+            <t t-if="state.loading">
+                <div class="d-flex justify-content-center align-items-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Consultando transacciones Punto Pago...</span>
+                    </div>
+                </div>
+            </t>
+
+            <t t-elif="state.data">
+                <!-- 4 Tiles Superiores Consistentes (col-md-3) -->
+                <div class="row g-3 mb-4">
+                    <!-- Tile 1: Total Recaudado Punto Pago -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-money text-success me-1"></i>Total Recaudado Punto Pago
+                            </div>
+                            <div class="fs-2 fw-bold text-success">
+                                $ <t t-esc="formatMoney(state.data.total_recaudado)"/>
+                            </div>
+                            <small class="text-muted"><t t-esc="state.data.count_payments"/> pago(s) registrado(s)</small>
+                        </div>
+                    </div>
+
+                    <!-- Tile 2: Pagos en Facturas / CxC -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-file-text-o text-primary me-1"></i>Cobros en Facturas
+                            </div>
+                            <div class="fs-2 fw-bold text-primary">
+                                $ <t t-esc="formatMoney(state.data.total_pagos_facturas)"/>
+                            </div>
+                            <small class="text-muted">Abonos y cancelaciones de facturas</small>
+                        </div>
+                    </div>
+
+                    <!-- Tile 3: Pagos en Punto de Venta (POS) -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-shopping-basket text-info me-1"></i>Cobros en Caja (POS)
+                            </div>
+                            <div class="fs-2 fw-bold text-info">
+                                $ <t t-esc="formatMoney(state.data.total_pagos_pos)"/>
+                            </div>
+                            <small class="text-muted">Cobrado por sesión de mostrador</small>
+                        </div>
+                    </div>
+
+                    <!-- Tile 4: Órdenes de Venta Punto Pago -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-shopping-cart text-warning me-1"></i>Órdenes de Venta
+                            </div>
+                            <div class="fs-2 fw-bold text-warning">
+                                $ <t t-esc="formatMoney(state.data.total_ordenes_monto)"/>
+                            </div>
+                            <small class="text-muted"><t t-esc="state.data.count_orders"/> pedido(s) confirmado(s)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selector de Pestañas: Pagos vs Órdenes -->
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <button class="btn btn-sm d-flex align-items-center gap-2"
+                            t-att-class="state.activeTab === 'pagos' ? 'btn-primary fw-bold text-white shadow-sm' : 'btn-outline-secondary'"
+                            t-on-click="() => this.setActiveTab('pagos')">
+                        <i class="fa fa-money"></i>
+                        <span>Pagos y Cobros Conciliados</span>
+                        <span class="badge rounded-pill bg-white text-primary fw-bold ms-1" t-esc="state.data.transacciones_pagos.length + state.data.transacciones_pos.length"/>
+                    </button>
+                    <button class="btn btn-sm d-flex align-items-center gap-2"
+                            t-att-class="state.activeTab === 'ordenes' ? 'btn-primary fw-bold text-white shadow-sm' : 'btn-outline-secondary'"
+                            t-on-click="() => this.setActiveTab('ordenes')">
+                        <i class="fa fa-file-text-o"></i>
+                        <span>Órdenes de Venta Punto Pago</span>
+                        <span class="badge rounded-pill bg-white text-primary fw-bold ms-1" t-esc="state.data.ordenes_venta.length"/>
+                    </button>
+                </div>
+
+                <!-- 1. Tabla de Pagos Conciliados -->
+                <div t-if="state.activeTab === 'pagos'" class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h5 class="m-0 fw-bold text-dark">
+                            <i class="fa fa-list-alt me-2 text-success"></i>Detalle de Transacciones de Pago Recaudadas
+                        </h5>
+                        <button class="btn btn-sm btn-outline-secondary" t-on-click="() => this.loadData()">
+                            <i class="fa fa-refresh me-1"></i>Refrescar
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle m-0 text-nowrap">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-start" style="min-width: 140px;">Referencia Pago</th>
+                                        <th class="text-center" style="min-width: 110px;">Fecha</th>
+                                        <th class="text-start" style="min-width: 220px;">Cliente</th>
+                                        <th class="text-start" style="min-width: 180px;">Diario / Canal</th>
+                                        <th class="text-start" style="min-width: 200px;">Facturas / Memo</th>
+                                        <th class="text-center" style="min-width: 110px;">Estado</th>
+                                        <th class="text-end" style="min-width: 130px;">Monto Cobrado ($)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="state.data.transacciones_pagos.length === 0 and state.data.transacciones_pos.length === 0">
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4 text-muted">
+                                                <i class="fa fa-info-circle me-1"></i>No se encontraron transacciones de pago para Punto Pago en este rango.
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <!-- Pagos Directos de Facturas -->
+                                    <t t-foreach="state.data.transacciones_pagos" t-as="p" t-key="p.id">
+                                        <tr>
+                                            <td class="text-start fw-bold text-primary">
+                                                <i class="fa fa-check-circle text-success me-1"></i>
+                                                <t t-esc="p.reference"/>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-light text-dark border"><t t-esc="p.date"/></span>
+                                            </td>
+                                            <td class="text-start fw-medium text-dark"><t t-esc="p.partner_name"/></td>
+                                            <td class="text-start text-muted"><t t-esc="p.journal_name"/></td>
+                                            <td class="text-start text-muted fs-8"><t t-esc="p.invoices"/></td>
+                                            <td class="text-center">
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                    <t t-esc="p.state"/>
+                                                </span>
+                                            </td>
+                                            <td class="text-end pe-3 fw-bold text-success fs-7">
+                                                $ <t t-esc="formatMoney(p.amount)"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <!-- Pagos de Mostrador POS -->
+                                    <t t-foreach="state.data.transacciones_pos" t-as="pp" t-key="'pos_' + pp.id">
+                                        <tr>
+                                            <td class="text-start fw-bold text-info">
+                                                <i class="fa fa-shopping-basket me-1"></i>
+                                                <t t-esc="pp.order_name"/>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-light text-dark border"><t t-esc="pp.date"/></span>
+                                            </td>
+                                            <td class="text-start fw-medium text-dark"><t t-esc="pp.partner_name"/></td>
+                                            <td class="text-start text-muted">Caja Mostrador (POS)</td>
+                                            <td class="text-start text-muted fs-8"><t t-esc="pp.method_name"/></td>
+                                            <td class="text-center">
+                                                <span class="badge bg-info-subtle text-info border border-info-subtle">
+                                                    Cobrado
+                                                </span>
+                                            </td>
+                                            <td class="text-end pe-3 fw-bold text-info fs-7">
+                                                $ <t t-esc="formatMoney(pp.amount)"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                                <tfoot class="table-light fw-bold sticky-bottom">
+                                    <tr class="table-success border-top border-2 border-success">
+                                        <td colspan="6" class="text-start">TOTAL RECAUDADO EN EL PERÍODO</td>
+                                        <td class="text-end pe-3 text-success fs-6 fw-bold">$ <t t-esc="formatMoney(state.data.total_recaudado)"/></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Tabla de Órdenes de Venta Punto Pago -->
+                <div t-if="state.activeTab === 'ordenes'" class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h5 class="m-0 fw-bold text-dark">
+                            <i class="fa fa-shopping-cart me-2 text-warning"></i>Órdenes de Venta con Método Punto Pago
+                        </h5>
+                        <button class="btn btn-sm btn-outline-secondary" t-on-click="() => this.loadData()">
+                            <i class="fa fa-refresh me-1"></i>Refrescar
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle m-0 text-nowrap">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-start" style="min-width: 140px;">Número de Orden</th>
+                                        <th class="text-center" style="min-width: 130px;">Fecha y Hora</th>
+                                        <th class="text-start" style="min-width: 250px;">Cliente</th>
+                                        <th class="text-start" style="min-width: 180px;">Término de Pago</th>
+                                        <th class="text-center" style="min-width: 130px;">Estado de Facturación</th>
+                                        <th class="text-end" style="min-width: 130px;">Monto Total ($)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="state.data.ordenes_venta.length === 0">
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4 text-muted">
+                                                <i class="fa fa-info-circle me-1"></i>No se encontraron pedidos de venta con condición Punto Pago en el rango seleccionado.
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <t t-foreach="state.data.ordenes_venta" t-as="o" t-key="o.id">
+                                        <tr>
+                                            <td class="text-start fw-bold text-primary">
+                                                <i class="fa fa-file-text-o me-2"></i>
+                                                <t t-esc="o.name"/>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-light text-dark border"><t t-esc="o.date_order"/></span>
+                                            </td>
+                                            <td class="text-start text-dark fw-medium"><t t-esc="o.partner_name"/></td>
+                                            <td class="text-start text-muted"><t t-esc="o.payment_term"/></td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary-subtle text-secondary border">
+                                                    <t t-esc="o.invoice_status"/>
+                                                </span>
+                                            </td>
+                                            <td class="text-end pe-3 fw-bold text-primary fs-7">
+                                                $ <t t-esc="formatMoney(o.amount_total)"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                                <tfoot class="table-light fw-bold sticky-bottom">
+                                    <tr class="table-warning border-top border-2 border-warning">
+                                        <td colspan="5" class="text-start">TOTAL ÓRDENES DE VENTA PUNTO PAGO</td>
+                                        <td class="text-end pe-3 text-dark fs-6 fw-bold">$ <t t-esc="formatMoney(state.data.total_ordenes_monto)"/></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

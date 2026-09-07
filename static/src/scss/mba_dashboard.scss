@@ -1,0 +1,275 @@
+.o_mba_dashboard {
+    height: 100%;
+    overflow-y: auto;
+    padding: map-get($spacers, 3);
+    background-color: $o-gray-100;
+
+    .o_mba_header {
+        background: $o-view-background-color;
+        padding: map-get($spacers, 3);
+        border-radius: $o-border-radius-lg;
+        border: 1px solid $o-gray-300;
+
+        .o_mba_brand_badge {
+            background: $o-brand-primary;
+            color: $o-view-background-color;
+            font-size: $o-font-size-base-smaller;
+            font-weight: $o-font-weight-bold;
+            padding: 4px 10px;
+            border-radius: $o-border-radius-sm;
+        }
+
+        .o_mba_title_text {
+            color: $o-gray-900;
+            font-size: $o-font-size-base * 1.25;
+        }
+
+        .o_mba_btn_quarter {
+            background: $o-gray-100;
+            border: 1px solid $o-gray-300;
+            color: $o-gray-700;
+            border-radius: $o-border-radius;
+            padding: map-get($spacers, 2);
+            text-align: center;
+
+            .o_mba_quarter_title {
+                display: block;
+                font-weight: $o-font-weight-bold;
+                font-size: $o-font-size-base;
+            }
+
+            .o_mba_quarter_sub {
+                display: block;
+                color: $o-gray-500;
+                font-size: $o-font-size-base-smaller;
+            }
+
+            &:hover {
+                background: $o-gray-200;
+                border-color: $o-gray-400;
+            }
+
+            &.active {
+                background: $o-brand-primary;
+                color: $o-view-background-color;
+                border-color: $o-brand-primary;
+
+                .o_mba_quarter_sub {
+                    color: $o-gray-200;
+                }
+            }
+        }
+
+        .o_mba_btn_month {
+            background: $o-view-background-color;
+            border: 1px solid $o-gray-300;
+            color: $o-gray-700;
+            padding: map-get($spacers, 2) map-get($spacers, 3);
+            border-radius: $o-border-radius;
+
+            &:hover {
+                background: $o-gray-100;
+                border-color: $o-gray-400;
+            }
+
+            &.active {
+                background: $o-info;
+                color: $o-view-background-color;
+                border-color: $o-info;
+            }
+        }
+    }
+
+    .o_mba_kpi_summary_bar {
+        .o_mba_kpi_box {
+            background: $o-view-background-color;
+            padding: map-get($spacers, 3);
+            border-radius: $o-border-radius;
+            border: 1px solid $o-gray-300;
+
+            .o_mba_kpi_label {
+                font-size: $o-font-size-base-smaller;
+                font-weight: $o-font-weight-medium;
+                color: $o-gray-600;
+                margin-bottom: 4px;
+            }
+
+            .o_mba_kpi_value {
+                font-size: $o-font-size-base * 1.5;
+                font-weight: $o-font-weight-bold;
+                line-height: 1.2;
+                margin-bottom: 4px;
+                font-variant-numeric: tabular-nums;
+            }
+
+            &.o_mba_has_tooltip {
+                position: relative;
+
+                &:hover .o_mba_hover_popover {
+                    opacity: 1;
+                    visibility: visible;
+                    transform: translateY(0);
+                }
+            }
+        }
+    }
+
+    // Tooltip flotante interactivo (Popover Hover)
+    .o_mba_tooltip_wrapper {
+        position: relative;
+        display: inline-block;
+
+        &:hover .o_mba_hover_popover {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .o_mba_hover_popover {
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%) translateY(6px);
+        margin-bottom: 8px;
+        min-width: 280px;
+        width: max-content;
+        max-width: 360px;
+        background: #ffffff;
+        border: 1px solid $o-gray-300;
+        border-radius: $o-border-radius;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        padding: 0;
+        z-index: 1050;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+        pointer-events: none;
+
+        .popover-header {
+            background-color: $o-gray-100;
+            font-weight: $o-font-weight-bold;
+            font-size: $o-font-size-base-smaller;
+            color: $o-gray-800;
+            padding: 6px 10px;
+            border-bottom: 1px solid $o-gray-200;
+            border-radius: $o-border-radius $o-border-radius 0 0;
+        }
+
+        .popover-body {
+            padding: 8px 12px;
+            font-size: $o-font-size-base-smaller;
+            color: $o-gray-700;
+        }
+
+        // Flecha inferior
+        &::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #ffffff transparent transparent transparent;
+        }
+    }
+
+    .o_mba_columns_wrapper {
+        .o_mba_column_header {
+            background: $o-view-background-color;
+            padding: map-get($spacers, 2) map-get($spacers, 3);
+            border-radius: $o-border-radius;
+            border: 1px solid $o-gray-300;
+            min-height: 72px;
+        }
+
+        .o_mba_tile_card {
+            background: $o-view-background-color;
+            border-radius: $o-border-radius;
+            padding: map-get($spacers, 3);
+            border: 1px solid $o-gray-300;
+            min-height: 105px;
+
+            &.o_mba_tile_sales {
+                border-top: 3px solid $o-brand-primary;
+            }
+
+            &.o_mba_tile_collection {
+                border-top: 3px solid $o-success;
+            }
+
+            &.o_mba_tile_alert {
+                border-top: 3px solid $o-danger;
+            }
+
+            &.o_mba_tile_active_week {
+                background: $o-gray-100;
+                border-color: $o-warning;
+            }
+
+            .o_mba_tile_badge {
+                font-size: $o-font-size-base;
+                color: $o-gray-900;
+            }
+
+            .o_mba_tile_amount {
+                font-variant-numeric: tabular-nums;
+            }
+        }
+    }
+
+    .o_mba_fs_small {
+        font-size: $o-font-size-base-small;
+    }
+
+    .o_mba_fs_smaller {
+        font-size: $o-font-size-base-smaller;
+    }
+
+    .o_mba_mtd_table {
+        font-variant-numeric: tabular-nums;
+
+        .sticky-col {
+            position: sticky;
+            left: 0;
+            box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+        }
+
+        thead.sticky-top {
+            top: 0;
+            z-index: 4;
+        }
+
+        tfoot.sticky-bottom {
+            position: sticky;
+            bottom: 0;
+            z-index: 4;
+        }
+    }
+
+    // Compras en Tránsito
+    .text-transit {
+        color: #d97706 !important;
+    }
+    .bg-transit {
+        background-color: #d97706 !important;
+        color: #ffffff !important;
+    }
+    .btn-transit {
+        background-color: #d97706 !important;
+        border-color: #d97706 !important;
+        color: #ffffff !important;
+    }
+    .border-transit {
+        border-color: #d97706 !important;
+    }
+    .table-transit {
+        background-color: #fef3c7 !important;
+        color: #92400e !important;
+    }
+}

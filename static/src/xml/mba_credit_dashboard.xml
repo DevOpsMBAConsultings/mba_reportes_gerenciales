@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="mba_reportes_gerenciales.CreditDashboard">
+        <div class="o_mba_dashboard">
+            <!-- Header Superior: Año, Trimestres y Meses -->
+            <header class="o_mba_header">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="o_mba_brand_badge">
+                            <i class="fa fa-line-chart me-2"></i>MBA Analytics
+                        </div>
+                        <h2 class="m-0 fw-bold o_mba_title_text">Control Financiero: Ventas a Crédito vs Cobranza</h2>
+                    </div>
+                    <div class="o_mba_year_selector d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" t-on-click="() => this.changeYear(-1)">
+                            <i class="fa fa-chevron-left"></i>
+                        </button>
+                        <span class="fw-bold fs-5 px-2" t-esc="state.year"/>
+                        <button class="btn btn-outline-secondary btn-sm" t-on-click="() => this.changeYear(1)">
+                            <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Selector de Trimestre -->
+                <div class="o_mba_quarter_pills d-flex gap-2 mb-3">
+                    <t t-foreach="[1, 2, 3, 4]" t-as="q" t-key="q">
+                        <button class="btn o_mba_btn_quarter flex-fill" 
+                                t-att-class="{'active': state.quarter === q}"
+                                t-on-click="() => this.selectQuarter(q)">
+                            <span class="o_mba_quarter_title">Trimestre <t t-esc="q"/></span>
+                            <small class="o_mba_quarter_sub" t-esc="this.getQuarterLabel(q)"/>
+                        </button>
+                    </t>
+                </div>
+
+                <!-- Selector de Meses dentro del Trimestre -->
+                <div class="o_mba_month_tabs d-flex gap-2">
+                    <t t-foreach="this.getMonthsForQuarter(state.quarter)" t-as="m" t-key="m.number">
+                        <button class="btn o_mba_btn_month flex-fill"
+                                t-att-class="{'active': state.month === m.number}"
+                                t-on-click="() => this.selectMonth(m.number)">
+                            <i class="fa fa-calendar-o me-2"></i>
+                            <span class="fw-bold" t-esc="m.name"/>
+                        </button>
+                    </t>
+                </div>
+            </header>
+
+            <!-- Loading Spinner -->
+            <t t-if="state.loading">
+                <div class="d-flex justify-content-center align-items-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando datos...</span>
+                    </div>
+                </div>
+            </t>
+
+            <!-- Resumen Superior de Totales del Mes Seleccionado -->
+            <div t-if="!state.loading and state.data" class="o_mba_kpi_summary_bar my-3">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box o_mba_has_tooltip">
+                            <div class="o_mba_kpi_label d-flex justify-content-between">
+                                <span>Total Facturado Neto</span>
+                                <i class="fa fa-info-circle text-muted"></i>
+                            </div>
+                            <div class="o_mba_kpi_value text-primary">$ <t t-esc="formatMoney(state.data.totals.sales)"/></div>
+                            <small class="text-muted"><i class="fa fa-file-text-o me-1"></i>Facturación en el mes</small>
+
+                            <!-- Popover Hover Desglose de Ventas del Mes -->
+                            <div class="o_mba_hover_popover">
+                                <div class="popover-header"><i class="fa fa-shopping-cart me-1"></i>Ventas del Mes</div>
+                                <div class="popover-body">
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span class="text-muted">💳 A Crédito:</span>
+                                        <strong class="text-primary">$ <t t-esc="formatMoney(state.data.totals.credit_sales)"/></strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span class="text-muted">💵 De Contado:</span>
+                                        <strong class="text-success">$ <t t-esc="formatMoney(state.data.totals.cash_sales)"/></strong>
+                                    </div>
+                                    <t t-if="state.data.totals.refund_sales > 0">
+                                        <div class="d-flex justify-content-between py-1 text-danger">
+                                            <span>🔄 Notas de Crédito:</span>
+                                            <strong>-$ <t t-esc="formatMoney(state.data.totals.refund_sales)"/></strong>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box">
+                            <div class="o_mba_kpi_label">Cobranza Proyectada</div>
+                            <div class="o_mba_kpi_value text-info">$ <t t-esc="formatMoney(state.data.totals.expected)"/></div>
+                            <small class="text-muted"><i class="fa fa-clock-o me-1"></i>Expectativa original</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box o_mba_has_tooltip">
+                            <div class="o_mba_kpi_label d-flex justify-content-between">
+                                <span>Total Cobrado Efectivo</span>
+                                <i class="fa fa-info-circle text-muted"></i>
+                            </div>
+                            <div class="o_mba_kpi_value text-success">$ <t t-esc="formatMoney(state.data.totals.paid)"/></div>
+                            <small class="text-muted"><i class="fa fa-check-circle me-1"></i>Liquidado a la fecha</small>
+
+                            <!-- Popover Hover Desglose Cobros del Mes -->
+                            <div class="o_mba_hover_popover">
+                                <div class="popover-header"><i class="fa fa-university me-1"></i>Cobranza del Mes</div>
+                                <div class="popover-body">
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span class="text-muted">💳 Cobro Crédito:</span>
+                                        <strong class="text-primary">$ <t t-esc="formatMoney(state.data.totals.paid_credit)"/></strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                        <span class="text-muted">💵 Cobro Contado:</span>
+                                        <strong class="text-success">$ <t t-esc="formatMoney(state.data.totals.paid_cash)"/></strong>
+                                    </div>
+                                    <div class="mt-2 text-muted fw-bold o_mba_fs_smaller">Por Método / Banco:</div>
+                                    <t t-foreach="Object.keys(state.data.totals.by_journal)" t-as="jName" t-key="jName">
+                                        <div class="d-flex justify-content-between align-items-center py-1 o_mba_fs_smaller">
+                                            <span class="me-2 text-truncate" style="max-width: 200px;" t-att-title="jName"><t t-esc="jName"/>:</span>
+                                            <strong class="text-nowrap">$ <t t-esc="formatMoney(state.data.totals.by_journal[jName])"/></strong>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box">
+                            <div class="o_mba_kpi_label">Por Cobrar / En Mora</div>
+                            <div class="o_mba_kpi_value text-danger">$ <t t-esc="formatMoney(state.data.totals.residual)"/></div>
+                            <small class="text-muted"><i class="fa fa-exclamation-circle me-1"></i>Saldo vivo pendiente</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenedor Principal: 2 Columnas de Mosaicos Emparejadas Fila por Fila -->
+            <div t-if="!state.loading and state.data" class="o_mba_columns_wrapper">
+                <!-- Encabezados de Columnas -->
+                <div class="row g-4 mb-3">
+                    <div class="col-6">
+                        <div class="o_mba_column_header h-100 d-flex flex-column justify-content-between">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span class="fw-bold fs-5"><i class="fa fa-shopping-cart me-2"></i>Facturación Semanal (Crédito + Contado)</span>
+                                <span class="badge bg-primary px-3 py-2 fs-6">$ <t t-esc="formatMoney(state.data.totals.sales)"/></span>
+                            </div>
+                            <small class="text-muted mt-1">Total neto facturado (Pasa el cursor sobre el monto para ver el desglose)</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="o_mba_column_header h-100 d-flex flex-column justify-content-between">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span class="fw-bold fs-5"><i class="fa fa-calendar-check-o me-2"></i>Cobranza y Expectativa</span>
+                                <span class="badge bg-success px-3 py-2 fs-6">$ <t t-esc="formatMoney(state.data.totals.expected)"/></span>
+                            </div>
+                            <small class="text-muted mt-1">Expectativa por término de pago (+ saldo no cobrado que se desplaza)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Semanas en Filas Emparejadas -->
+                <div class="d-flex flex-column gap-3">
+                    <t t-foreach="state.data.weeks" t-as="w" t-key="w.index">
+                        <div class="row g-4 align-items-stretch">
+                            <!-- Columna Izquierda: Venta Facturada -->
+                            <div class="col-6">
+                                <div class="o_mba_tile_card o_mba_tile_sales h-100 d-flex flex-column justify-content-between" 
+                                     t-att-class="{'o_mba_tile_active_week': w.is_current}">
+                                    <div class="o_mba_tile_badge">
+                                        <span class="fw-bold" t-esc="w.label"/>
+                                        <t t-if="w.is_current">
+                                            <span class="badge bg-warning text-dark ms-2">Semana Actual</span>
+                                        </t>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between mt-3">
+                                        <div>
+                                            <span class="text-muted o_mba_fs_smaller">Facturas emitidas: </span>
+                                            <span class="fw-bold text-dark" t-esc="w.sales.count"/>
+                                        </div>
+                                        <div class="o_mba_tooltip_wrapper">
+                                            <div class="o_mba_tile_amount text-primary fw-bold fs-4 d-flex align-items-center cursor-pointer">
+                                                $ <t t-esc="formatMoney(w.sales.amount)"/>
+                                                <i class="fa fa-info-circle ms-1 text-muted fs-6"></i>
+                                            </div>
+                                            <!-- Popover Flotante de la Semana -->
+                                            <div class="o_mba_hover_popover">
+                                                <div class="popover-header">
+                                                    <i class="fa fa-file-text-o me-1"></i><t t-esc="w.label"/> - Ventas
+                                                </div>
+                                                <div class="popover-body">
+                                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                                        <span class="text-muted">💳 A Crédito:</span>
+                                                        <strong class="text-primary">$ <t t-esc="formatMoney(w.sales.credit)"/> <small class="text-muted fw-normal">(<t t-esc="w.sales.count_credit"/>)</small></strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                                        <span class="text-muted">💵 De Contado:</span>
+                                                        <strong class="text-success">$ <t t-esc="formatMoney(w.sales.cash)"/> <small class="text-muted fw-normal">(<t t-esc="w.sales.count_cash"/>)</small></strong>
+                                                    </div>
+                                                    <t t-if="w.sales.refund > 0">
+                                                        <div class="d-flex justify-content-between py-1 border-bottom text-danger">
+                                                            <span>🔄 Notas de Crédito:</span>
+                                                            <strong>-$ <t t-esc="formatMoney(w.sales.refund)"/> <small class="fw-normal">(<t t-esc="w.sales.count_refund"/>)</small></strong>
+                                                        </div>
+                                                    </t>
+                                                    <div class="d-flex justify-content-between pt-1 fw-bold">
+                                                        <span>= Total Neto:</span>
+                                                        <span class="text-primary">$ <t t-esc="formatMoney(w.sales.amount)"/></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Columna Derecha: Cobranza & Morosidad -->
+                            <div class="col-6">
+                                <div class="o_mba_tile_card o_mba_tile_collection h-100 d-flex flex-column justify-content-between"
+                                     t-att-class="{'o_mba_tile_alert': w.collection.residual > 0, 'o_mba_tile_active_week': w.is_current}">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="o_mba_tile_badge">
+                                            <span class="fw-bold" t-esc="w.label"/>
+                                            <t t-if="w.collection.rollover > 0">
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-2" title="Incluye deuda vencida arrastrada de semanas o meses anteriores">
+                                                    <i class="fa fa-exclamation-triangle me-1"></i>+$ <t t-esc="formatMoney(w.collection.rollover)"/> en mora
+                                                </span>
+                                            </t>
+                                        </div>
+                                        <div class="o_mba_tile_badge">
+                                            <t t-if="w.collection.residual > 0">
+                                                <span class="text-danger fw-bold o_mba_fs_small">Pendiente: $ <t t-esc="formatMoney(w.collection.residual)"/></span>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="text-success fw-bold o_mba_fs_small"><i class="fa fa-check-circle me-1"></i>Al Día</span>
+                                            </t>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <!-- Barra de Progreso Cobrado vs Esperado -->
+                                        <div class="progress" style="height: 10px;">
+                                            <div class="progress-bar bg-success" role="progressbar" 
+                                                 t-att-style="'width: ' + this.getCollectionPercent(w) + '%;'"
+                                                 t-att-title="'Cobrado: ' + this.getCollectionPercent(w) + '%'">
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex justify-content-between text-muted o_mba_fs_smaller mt-2">
+                                            <div class="o_mba_tooltip_wrapper">
+                                                <span>Ya Cobrado: <strong class="text-success cursor-pointer">$ <t t-esc="formatMoney(w.collection.paid)"/> <i class="fa fa-info-circle text-muted"></i></strong></span>
+                                                <!-- Popover Cobranza Semanal -->
+                                                <div class="o_mba_hover_popover">
+                                                    <div class="popover-header">
+                                                        <i class="fa fa-money me-1"></i><t t-esc="w.label"/> - Cobranzas
+                                                    </div>
+                                                    <div class="popover-body">
+                                                        <div class="d-flex justify-content-between py-1 border-bottom">
+                                                            <span class="text-muted">💳 Cobro de Crédito:</span>
+                                                            <strong class="text-primary">$ <t t-esc="formatMoney(w.collection.paid_credit)"/></strong>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between py-1 border-bottom">
+                                                            <span class="text-muted">💵 Cobro de Contado:</span>
+                                                            <strong class="text-success">$ <t t-esc="formatMoney(w.collection.paid_cash)"/></strong>
+                                                        </div>
+                                                        <div class="mt-2 text-muted fw-bold">Por Método / Banco:</div>
+                                                        <t t-foreach="Object.keys(w.collection.by_journal)" t-as="jName" t-key="jName">
+                                                            <div class="d-flex justify-content-between align-items-center py-1">
+                                                                <span class="me-2 text-truncate" style="max-width: 190px;" t-att-title="jName"><t t-esc="jName"/>:</span>
+                                                                <strong class="text-nowrap">$ <t t-esc="formatMoney(w.collection.by_journal[jName])"/></strong>
+                                                            </div>
+                                                        </t>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <span>Meta Esperada: <strong>$ <t t-esc="formatMoney(w.collection.expected)"/></strong></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

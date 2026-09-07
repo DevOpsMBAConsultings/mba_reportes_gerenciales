@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="mba_reportes_gerenciales.InventoryDashboard">
+        <div class="o_mba_dashboard o_mba_inventory_dashboard">
+            <!-- Header Superior -->
+            <header class="o_mba_header mb-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="o_mba_brand_badge">
+                            <i class="fa fa-line-chart me-2"></i>MBA Analytics
+                        </div>
+                        <h2 class="m-0 fw-bold o_mba_title_text">Control Operativo de Inventario y Abastecimiento</h2>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" t-on-click="() => this.loadData()">
+                        <i class="fa fa-refresh me-1"></i>Actualizar Stock
+                    </button>
+                </div>
+            </header>
+
+            <!-- Spinner de Carga -->
+            <t t-if="state.loading">
+                <div class="d-flex justify-content-center align-items-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Calculando existencias y valorización...</span>
+                    </div>
+                </div>
+            </t>
+
+            <t t-elif="state.data">
+                <!-- 4 Tiles Superiores Consistentes (col-md-3) -->
+                <div class="row g-3 mb-4">
+                    <!-- Tile 1: Físico en Bodega (Stock > 0) -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-cubes text-primary me-1"></i>Físico en Bodega (Stock > 0)
+                            </div>
+                            <div class="fs-2 fw-bold text-primary">
+                                $ <t t-esc="formatMoney(state.data.fisico)"/>
+                            </div>
+                            <small class="text-muted">Valorización real de existencias positivas</small>
+                        </div>
+                    </div>
+
+                    <!-- Tile 2: Déficit Ventas Negativas -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-exclamation-triangle text-danger me-1"></i>Déficit Ventas Negativas
+                            </div>
+                            <div class="fs-2 fw-bold text-danger">
+                                - $ <t t-esc="formatMoney(state.data.deficit)"/>
+                            </div>
+                            <small class="text-muted">Costo vendido sin entrega previa</small>
+                        </div>
+                    </div>
+
+                    <!-- Tile 3: Compras en Tránsito -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-truck text-transit me-1"></i>Compras en Tránsito
+                            </div>
+                            <div class="fs-2 fw-bold text-transit">
+                                + $ <t t-esc="formatMoney(state.data.transito)"/>
+                            </div>
+                            <small class="text-muted">Órdenes confirmadas pendientes de recibir</small>
+                        </div>
+                    </div>
+
+                    <!-- Tile 4: Stock Proyectado Neto -->
+                    <div class="col-md-3">
+                        <div class="o_mba_kpi_box bg-white p-3 rounded border shadow-sm h-100">
+                            <div class="text-muted fs-7 text-uppercase fw-bold mb-1">
+                                <i class="fa fa-calculator text-success me-1"></i>Stock Proyectado Neto
+                            </div>
+                            <div class="fs-2 fw-bold" t-att-class="state.data.proyectado >= 0 ? 'text-success' : 'text-danger'">
+                                $ <t t-esc="formatMoney(state.data.proyectado)"/>
+                            </div>
+                            <small class="text-muted">Físico - Déficit + Tránsito</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selector de Pestañas de Auditoría -->
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <button class="btn btn-sm d-flex align-items-center gap-2"
+                            t-att-class="state.activeAuditTab === 'deficit' ? 'btn-danger fw-bold text-white shadow-sm' : 'btn-outline-secondary'"
+                            t-on-click="() => this.setAuditTab('deficit')">
+                        <i class="fa fa-exclamation-circle"></i>
+                        <span>Auditoría de Déficit (Ventas Negativas)</span>
+                        <span class="badge rounded-pill bg-white text-danger fw-bold ms-1" t-esc="state.data.deficit_list.length"/>
+                    </button>
+                    <button class="btn btn-sm d-flex align-items-center gap-2"
+                            t-att-class="state.activeAuditTab === 'transit' ? 'btn-transit fw-bold shadow-sm' : 'btn-outline-secondary'"
+                            t-on-click="() => this.setAuditTab('transit')">
+                        <i class="fa fa-truck"></i>
+                        <span>Compras en Tránsito Confirmadas</span>
+                        <span class="badge rounded-pill bg-white text-dark fw-bold ms-1" t-esc="state.data.transit_list.length"/>
+                    </button>
+                </div>
+
+                <!-- 1. Tabla de Auditoría: Productos con Existencia Negativa -->
+                <div t-if="state.activeAuditTab === 'deficit'" class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-danger fs-7">
+                            <i class="fa fa-exclamation-circle me-1"></i>Auditoría de Déficit: Productos con Existencia Negativa
+                        </span>
+                        <span class="fw-bold text-danger fs-6">- $ <t t-esc="formatMoney(state.data.deficit)"/></span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+                            <table class="table table-hover table-bordered align-middle m-0 text-nowrap">
+                                <thead class="table-light sticky-top user-select-none">
+                                    <tr>
+                                        <th class="text-start sticky-col" style="min-width: 150px; background-color: #f8f9fa; cursor: pointer;" t-on-click="() => this.sortDeficit('sale_orders')">
+                                            Orden de Venta <i t-attf-class="fa #{this.getDeficitSortIcon('sale_orders')} ms-1"></i>
+                                        </th>
+                                        <th class="text-center" style="min-width: 110px; cursor: pointer;" t-on-click="() => this.sortDeficit('date')">
+                                            Fecha <i t-attf-class="fa #{this.getDeficitSortIcon('date')} ms-1"></i>
+                                        </th>
+                                        <th class="text-start" style="min-width: 100px; cursor: pointer;" t-on-click="() => this.sortDeficit('default_code')">
+                                            Código <i t-attf-class="fa #{this.getDeficitSortIcon('default_code')} ms-1"></i>
+                                        </th>
+                                        <th class="text-start" style="min-width: 250px; cursor: pointer;" t-on-click="() => this.sortDeficit('product_name')">
+                                            Producto <i t-attf-class="fa #{this.getDeficitSortIcon('product_name')} ms-1"></i>
+                                        </th>
+                                        <th class="text-start" style="min-width: 180px; cursor: pointer;" t-on-click="() => this.sortDeficit('location_name')">
+                                            Ubicación <i t-attf-class="fa #{this.getDeficitSortIcon('location_name')} ms-1"></i>
+                                        </th>
+                                        <th class="text-end" style="min-width: 130px; cursor: pointer;" t-on-click="() => this.sortDeficit('negative_qty')">
+                                            Cantidad Negativa <i t-attf-class="fa #{this.getDeficitSortIcon('negative_qty')} ms-1"></i>
+                                        </th>
+                                        <th class="text-end" style="min-width: 130px; cursor: pointer;" t-on-click="() => this.sortDeficit('cost')">
+                                            Costo Unitario ($) <i t-attf-class="fa #{this.getDeficitSortIcon('cost')} ms-1"></i>
+                                        </th>
+                                        <th class="text-end text-danger" style="min-width: 140px; cursor: pointer;" t-on-click="() => this.sortDeficit('deficit_value')">
+                                            Déficit Total ($) <i t-attf-class="fa #{this.getDeficitSortIcon('deficit_value')} ms-1"></i>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="sortedDeficitList.length === 0">
+                                        <tr>
+                                            <td colspan="8" class="text-center py-4 text-success fw-bold">
+                                                <i class="fa fa-check-circle me-1"></i>¡Excelente! No hay existencias negativas en bodega.
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-foreach="sortedDeficitList" t-as="d" t-key="d_index">
+                                            <tr>
+                                                <td class="text-start fw-bold sticky-col bg-white">
+                                                    <t t-if="d.sale_orders">
+                                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-7">
+                                                            <i class="fa fa-file-text-o me-1"></i><t t-esc="d.sale_orders"/>
+                                                        </span>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span class="text-muted fst-italic fs-8">Sin OV (Ajuste)</span>
+                                                    </t>
+                                                </td>
+                                                <td class="text-center">
+                                                    <t t-if="d.date">
+                                                        <span class="badge bg-light text-dark border"><t t-esc="d.date"/></span>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span class="text-muted">-</span>
+                                                    </t>
+                                                </td>
+                                                <td class="text-start fw-bold text-muted"><t t-esc="d.default_code"/></td>
+                                                <td class="text-start fw-bold text-dark"><t t-esc="d.product_name"/></td>
+                                                <td class="text-start text-muted fs-8"><t t-esc="d.location_name"/></td>
+                                                <td class="text-end pe-3 fw-bold text-danger"><t t-esc="formatNumber(d.negative_qty)"/></td>
+                                                <td class="text-end pe-3">$ <t t-esc="formatMoney(d.cost)"/></td>
+                                                <td class="text-end pe-3 fw-bold text-danger fs-7">- $ <t t-esc="formatMoney(d.deficit_value)"/></td>
+                                            </tr>
+                                        </t>
+                                    </t>
+                                </tbody>
+                                <tfoot class="table-light fw-bold sticky-bottom">
+                                    <tr class="table-danger border-top border-2 border-danger">
+                                        <td colspan="7" class="text-start">TOTAL DÉFICIT VALORIZADO EN BODEGA</td>
+                                        <td class="text-end pe-3 fs-6 text-danger fw-bold">- $ <t t-esc="formatMoney(state.data.deficit)"/></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Tabla de Compras en Tránsito -->
+                <div t-if="state.activeAuditTab === 'transit'" class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-transit fs-7">
+                            <i class="fa fa-truck me-1"></i>Abastecimiento: Compras en Tránsito Pendientes de Recepción
+                        </span>
+                        <span class="fw-bold text-transit fs-6">+ $ <t t-esc="formatMoney(state.data.transito)"/></span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+                            <table class="table table-hover table-bordered align-middle m-0 text-nowrap">
+                                <thead class="table-light sticky-top user-select-none">
+                                    <tr>
+                                        <th class="text-start" style="cursor: pointer;" t-on-click="() => this.sortTransit('po_name')">
+                                            Orden de Compra <i t-attf-class="fa #{this.getTransitSortIcon('po_name')} ms-1"></i>
+                                        </th>
+                                        <th class="text-center" style="cursor: pointer;" t-on-click="() => this.sortTransit('date_planned')">
+                                            Fecha Prevista <i t-attf-class="fa #{this.getTransitSortIcon('date_planned')} ms-1"></i>
+                                        </th>
+                                        <th class="text-start" style="cursor: pointer;" t-on-click="() => this.sortTransit('partner_name')">
+                                            Proveedor <i t-attf-class="fa #{this.getTransitSortIcon('partner_name')} ms-1"></i>
+                                        </th>
+                                        <th class="text-start" style="cursor: pointer;" t-on-click="() => this.sortTransit('product_name')">
+                                            Producto <i t-attf-class="fa #{this.getTransitSortIcon('product_name')} ms-1"></i>
+                                        </th>
+                                        <th class="text-end" style="cursor: pointer;" t-on-click="() => this.sortTransit('product_qty')">
+                                            Pedida <i t-attf-class="fa #{this.getTransitSortIcon('product_qty')} ms-1"></i>
+                                        </th>
+                                        <th class="text-end" style="cursor: pointer;" t-on-click="() => this.sortTransit('qty_pending')">
+                                            En Tránsito <i t-attf-class="fa #{this.getTransitSortIcon('qty_pending')} ms-1"></i>
+                                        </th>
+                                        <th class="text-end" style="cursor: pointer;" t-on-click="() => this.sortTransit('price_unit')">
+                                            Precio Unit. ($) <i t-attf-class="fa #{this.getTransitSortIcon('price_unit')} ms-1"></i>
+                                        </th>
+                                        <th class="text-end text-transit" style="cursor: pointer;" t-on-click="() => this.sortTransit('transit_value')">
+                                            Monto en Tránsito ($) <i t-attf-class="fa #{this.getTransitSortIcon('transit_value')} ms-1"></i>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="sortedTransitList.length === 0">
+                                        <tr>
+                                            <td colspan="8" class="text-center py-4 text-muted">
+                                                <i class="fa fa-info-circle me-1"></i>No hay órdenes de compra pendientes de recibir.
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-foreach="sortedTransitList" t-as="t" t-key="t_index">
+                                            <tr>
+                                                <td class="text-start fw-bold text-primary"><t t-esc="t.po_name"/></td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-light text-dark border"><t t-esc="t.date_planned"/></span>
+                                                </td>
+                                                <td class="text-start text-dark fw-medium"><t t-esc="t.partner_name"/></td>
+                                                <td class="text-start fw-medium"><t t-esc="t.product_name"/></td>
+                                                <td class="text-end pe-3 text-muted"><t t-esc="formatNumber(t.product_qty)"/></td>
+                                                <td class="text-end pe-3 fw-bold text-transit"><t t-esc="formatNumber(t.qty_pending)"/></td>
+                                                <td class="text-end pe-3">$ <t t-esc="formatMoney(t.price_unit)"/></td>
+                                                <td class="text-end pe-3 fw-bold text-transit">+ $ <t t-esc="formatMoney(t.transit_value)"/></td>
+                                            </tr>
+                                        </t>
+                                    </t>
+                                </tbody>
+                                <tfoot class="table-light fw-bold sticky-bottom">
+                                    <tr class="table-transit border-top border-2 border-transit">
+                                        <td colspan="7" class="text-start">TOTAL COMPRAS EN TRÁNSITO PROYECTADAS</td>
+                                        <td class="text-end pe-3 fs-6 text-transit fw-bold">+ $ <t t-esc="formatMoney(state.data.transito)"/></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

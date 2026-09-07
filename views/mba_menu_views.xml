@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Menú Principal Raíz Reportes Gerenciales (Visible en Home Screen) -->
+    <menuitem id="menu_mba_reportes_gerenciales_root"
+              name="Reportes Gerenciales"
+              sequence="15"
+              web_icon="mba_reportes_gerenciales,static/description/icon.png"/>
+
+    <!-- Submenú Tableros Gerenciales -->
+    <menuitem id="menu_mba_reporting"
+              name="Tableros Gerenciales"
+              parent="menu_mba_reportes_gerenciales_root"
+              sequence="10"/>
+
+    <!-- 1. Acción del Tablero Semanal Crédito vs Cobranza -->
+    <menuitem id="menu_mba_credit_dashboard"
+              name="Ventas Crédito vs Cobranza"
+              parent="menu_mba_reporting"
+              action="action_mba_credit_dashboard"
+              sequence="10"/>
+
+    <!-- 2. Acción del Resumen Mensual MTD -->
+    <menuitem id="menu_mba_monthly_income"
+              name="Ingresos Mensuales (MTD)"
+              parent="menu_mba_reporting"
+              action="action_mba_monthly_income"
+              sequence="20"/>
+
+    <!-- 3. Acción de Cierre y Rentabilidad Real -->
+    <menuitem id="menu_mba_profitability_dashboard"
+              name="Cierre y Rentabilidad Real"
+              parent="menu_mba_reporting"
+              action="action_mba_profitability_dashboard"
+              sequence="30"/>
+
+    <!-- 4. Acción de Cierre Diario de Facturación y Arqueo -->
+    <menuitem id="menu_mba_daily_invoice_closing"
+              name="Cierre Diario de Facturación"
+              parent="menu_mba_reporting"
+              action="action_mba_daily_invoice_closing"
+              sequence="40"/>
+
+    <!-- 5. Acción de Control Operativo de Inventario -->
+    <menuitem id="menu_mba_inventory_dashboard"
+              name="Control Operativo de Inventario"
+              parent="menu_mba_reporting"
+              action="action_mba_inventory_dashboard"
+              sequence="50"/>
+
+    <!-- 6. Acción de Reporte de Órdenes Punto Pago -->
+    <menuitem id="menu_mba_punto_pago_report"
+              name="Reporte Órdenes Punto Pago"
+              parent="menu_mba_reporting"
+              action="action_mba_punto_pago_report"
+              sequence="60"/>
+</odoo>

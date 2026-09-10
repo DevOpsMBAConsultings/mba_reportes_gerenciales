@@ -89,10 +89,17 @@ class MbaProfitabilityDashboard(models.TransientModel):
                     total_move_cost = -sum(moves.stock_valuation_layer_ids.mapped('value'))
                     if total_qty > 0 and total_move_cost > 0:
                         unit_cost = total_move_cost / total_qty
+                        # Salvaguarda contable para consumibles/servicios
+                        if line.product_id.type in ('consu', 'service') and unit_cost > (line.price_unit or 0.0):
+                            unit_cost = line.price_unit or 0.0
                         p_cost = unit_cost * (line.quantity or 0.0) * sign
 
                 if p_cost is None:
-                    p_cost = (line.quantity or 0.0) * sign * (line.product_id.standard_price or 0.0)
+                    std_cost = line.product_id.standard_price or 0.0
+                    # Salvaguarda contable contra productos comodines consumibles/servicios
+                    if line.product_id.type in ('consu', 'service') and std_cost > (line.price_unit or 0.0):
+                        std_cost = line.price_unit or 0.0
+                    p_cost = (line.quantity or 0.0) * sign * std_cost
 
                 costo_ventas_trazado[pid] = costo_ventas_trazado.get(pid, 0.0) + p_cost
                 ventas_por_categoria[cid]['costo'] += p_cost

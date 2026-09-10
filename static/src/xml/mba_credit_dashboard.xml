@@ -62,11 +62,11 @@
                     <div class="col-md-3">
                         <div class="o_mba_kpi_box o_mba_has_tooltip">
                             <div class="o_mba_kpi_label d-flex justify-content-between">
-                                <span>Total Facturado Neto</span>
+                                <span>Total Facturado (con ITBMS)</span>
                                 <i class="fa fa-info-circle text-muted"></i>
                             </div>
                             <div class="o_mba_kpi_value text-primary">$ <t t-esc="formatMoney(state.data.totals.sales)"/></div>
-                            <small class="text-muted"><i class="fa fa-file-text-o me-1"></i>Facturación en el mes</small>
+                            <small class="text-muted"><i class="fa fa-file-text-o me-1"></i>Facturación total a cobrar</small>
 
                             <!-- Popover Hover Desglose de Ventas del Mes -->
                             <div class="o_mba_hover_popover">

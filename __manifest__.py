@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'Reportes Gerenciales y Centro de Mando Ejecutivo',
-    'version': '18.0.1.0.0',
+    'name': 'Reportes Gerenciales y Centro de Mando Ejecutivo (MBA Consultings)',
+    'version': '18.0.1.0.1',
     'category': 'Accounting/Analytics',
     'summary': 'Suite Ejecutiva de Reportes Gerenciales y Tableros Dinámicos: Ventas, Cobranza, Rentabilidad, Cierre Fiscal, Inventario y Órdenes Punto Pago | MBA Consultings',
     'description': """
